@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Legends Arena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1b26;
+            --bg-main: #24283b;
+            --border-color: #414868;
+            --text-main: #c0caf5;
+            --primary: #bb9af7;
+            --secondary: #7dcfff;
+            --quality-1-color: #e0af68; /* Amarelo */
+            --quality-2-color: #bb9af7; /* Roxo */
+            --quality-3-color: #ff9e64; /* Laranja */
+            --quality-4-color: #f7768e; /* Vermelho */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            background-color: var(--bg-main);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding-bottom: 80px; /* Espaço para nav mobile */
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        /* Navegação */
+        .desktop-nav { display: flex; }
+        .mobile-nav { display: none; }
+
+        .nav-button, .sub-nav-button {
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+        }
+        .nav-button.active, .sub-nav-button.active {
+            border-bottom-color: var(--primary);
+            color: white;
+            background-color: var(--border-color);
+        }
+        .nav-button:hover:not(.active), .sub-nav-button:hover:not(.active) { background-color: #565f89; }
+        
+        .mobile-nav-button {
+            transition: all 0.2s ease-in-out;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 0.75rem;
+        }
+        .mobile-nav-button.active {
+            color: var(--primary);
+            transform: translateY(-4px);
+        }
+        
+        #mobile-more-menu {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        /* Raridade */
+        .rarity-1 { border-color: #a9b1d6; } .rarity-1-bg { background-color: #a9b1d6; color: #1a1b26; }
+        .rarity-2 { border-color: #73daca; } .rarity-2-bg { background-color: #73daca; color: #1a1b26; }
+        .rarity-3 { border-color: #9ece6a; } .rarity-3-bg { background-color: #9ece6a; color: #1a1b26; }
+        .rarity-4 { border-color: #e0af68; } .rarity-4-bg { background-color: #e0af68; color: #1a1b26; }
+        .rarity-5 { border-color: #bb9af7; } .rarity-5-bg { background-color: #bb9af7; color: #1a1b26; }
+
+        .quality-tier-1 { box-shadow: 0 0 8px var(--quality-1-color); }
+        .quality-tier-2 { box-shadow: 0 0 12px var(--quality-2-color); }
+        .quality-tier-3 { box-shadow: 0 0 16px var(--quality-3-color); }
+        .quality-tier-4 { box-shadow: 0 0 20px var(--quality-4-color); }
+        .quality-tier-5 { animation: rgb-glow 2s infinite linear; }
+
+        @keyframes rgb-glow {
+            0% { box-shadow: 0 0 20px #ff0000; }
+            33% { box-shadow: 0 0 20px #00ff00; }
+            66% { box-shadow: 0 0 20px #0000ff; }
+            100% { box-shadow: 0 0 20px #ff0000; }
+        }
+
+
+        .rarity-5 .shine {
+            animation: shine 2s infinite;
+            background: linear-gradient(100deg, rgba(255,255,255,0) 20%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 80%);
+        }
+        @keyframes shine { to { background-position-x: -200%; } }
+        
+        .modal { transition: opacity 0.3s ease; }
+        .progress-bar-bg { background-color: #1a1b26; border-radius: 99px; overflow: hidden; }
+        .progress-bar-fill { background: linear-gradient(to right, var(--secondary), var(--primary)); transition: width 0.5s ease; }
+        
+        /* Battle Screen */
+        #battle-arena { background-size: cover; background-position: center; border-radius: 0.5rem; overflow: hidden; }
+        .battle-character { transition: transform 0.2s ease-out, filter 0.5s; position: relative; }
+        .battle-character.dead { filter: grayscale(1) opacity(0.5); transform: translateY(20px); }
+        .health-bar-bg { background-color: rgba(0,0,0,0.5); border-radius: 99px; overflow: hidden; border: 1px solid #1a1b26;}
+        .health-bar-fill { background: linear-gradient(to right, #9ece6a, #73daca); transition: width 0.5s ease-in-out; }
+        .health-bar-fill.enemy { background: linear-gradient(to right, #f7768e, #ff9e64); }
+
+        @keyframes attack-animation-player { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1) translateX(20px); } }
+        @keyframes attack-animation-enemy { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1) translateX(-20px); } }
+        
+        .attacking.player { animation: attack-animation-player 0.3s ease-in-out; }
+        .attacking.enemy { animation: attack-animation-enemy 0.3s ease-in-out; }
+        
+        @keyframes skill-cast-animation {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.2); filter: brightness(2) drop-shadow(0 0 15px var(--primary)); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .skill-cast { animation: skill-cast-animation 0.5s ease-in-out; }
+
+
+        @keyframes damage-float { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+        .damage-text {
+            position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+            font-size: 1.75rem; font-weight: 900; -webkit-text-stroke: 2px black;
+            animation: damage-float 1s forwards; pointer-events: none; z-index: 10;
+        }
+        .damage-text.damage { color: #ff9e64; }
+        .damage-text.heal { color: #9ece6a; }
+        .damage-text.skill { color: var(--primary); font-size: 1rem; top: -10px; }
+        
+        .btn-grad {
+            background-image: linear-gradient(to right, #DA22FF 0%, #9733EE  51%, #DA22FF  100%);
+            transition: 0.5s;
+            background-size: 200% auto;
+            color: white;            
+        }
+        .btn-grad:hover { background-position: right center; }
+        
+        .home-character-display {
+             filter: drop-shadow(0px 5px 15px rgba(0, 0, 0, 0.5));
+             max-height: 40vh;
+             margin-bottom: -20px;
+        }
+
+        /* Mobile First */
+        @media (max-width: 768px) {
+            .desktop-nav { display: none; }
+            .mobile-nav { display: flex; }
+            .main-container { border-radius: 0; border: none; }
+            body { padding: 0; }
+        }
+
+    </style>
+</head>
+<body class="p-0 md:p-8">
+
+    <div class="main-container overflow-hidden">
+        <!-- Header -->
+        <header class="hidden md:flex p-4 bg-gray-900/50 justify-between items-center border-b border-gray-700">
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-wider">Anime Legends Arena</h1>
+                <p class="text-sm text-gray-400">Bem-vindo, <span id="username-display" class="font-bold">Jogador</span>! <button id="logout-btn" class="text-red-400 text-xs">(Sair)</button></p>
+            </div>
+            <div class="text-right">
+                <div class="flex items-center gap-2"><img src="https://placehold.co/24x24/e0af68/1a1b26?text=$" class="rounded-full" alt="Ícone de Cristais"><span id="player-currency" class="text-lg font-semibold text-yellow-400">0</span></div>
+                <div class="text-sm text-gray-400">Cristais</div>
+            </div>
+        </header>
+
+        <!-- Desktop Navigation -->
+        <nav class="desktop-nav bg-gray-900/30">
+            <button data-screen="home" class="nav-button flex-1 p-4 font-semibold active">Home</button>
+            <button data-screen="battle" class="nav-button flex-1 p-4 font-semibold">Batalha</button>
+            <button data-screen="characters" class="nav-button flex-1 p-4 font-semibold">Heróis</button>
+            <button data-screen="inventory" class="nav-button flex-1 p-4 font-semibold">Inventário</button>
+            <button data-screen="recruit" class="nav-button flex-1 p-4 font-semibold">Recrutar</button>
+            <button data-screen="ranking" class="nav-button flex-1 p-4 font-semibold">Ranking</button>
+            <button data-screen="events" class="nav-button flex-1 p-4 font-semibold">Eventos</button>
+            <button data-screen="clan" class="nav-button flex-1 p-4 font-semibold">Clã</button>
+            <button data-screen="admin" class="nav-button flex-1 p-4 font-semibold text-red-400 hidden">Admin</button>
+        </nav>
+
+        <main class="p-4 md:p-6 min-h-[60vh]">
+            <!-- Screens -->
+            <div id="home-screen" class="screen active"></div>
+            <div id="battle-screen" class="screen"></div>
+            <div id="battle-arena-screen" class="screen"></div>
+            <div id="characters-screen" class="screen"></div>
+            <div id="formation-screen" class="screen"></div>
+            <div id="inventory-screen" class="screen"></div>
+            <div id="recruit-screen" class="screen"></div>
+            <div id="ranking-screen" class="screen"></div>
+            <div id="events-screen" class="screen"></div>
+            <div id="clan-screen" class="screen"></div>
+            <div id="admin-screen" class="screen"></div>
+        </main>
+
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700 justify-around p-2 z-40">
+            <button data-screen="home" class="mobile-nav-button active"><span>🏠</span>Home</button>
+            <button data-screen="battle" class="mobile-nav-button"><span>⚔️</span>Batalha</button>
+            <button data-screen="characters" class="mobile-nav-button"><span>🦸</span>Heróis</button>
+            <button data-screen="inventory" class="mobile-nav-button"><span>🎒</span>Inventário</button>
+            <button id="mobile-more-btn" class="mobile-nav-button"><span>☰</span>Mais</button>
+        </nav>
+    </div>
+    
+    <!-- Modals -->
+    <div id="recruit-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 modal p-4"></div>
+    <div id="character-detail-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 modal p-4"></div>
+    <div id="equipment-detail-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 modal p-4"></div>
+    <div id="equip-select-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 modal p-4"></div>
+    <div id="battle-result-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 modal p-4"></div>
+    <div id="upgrade-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 modal p-4"></div>
+    
+    <!-- Mobile "More" Menu -->
+    <div id="mobile-more-menu" class="fixed bottom-[72px] right-4 bg-gray-800 rounded-lg p-2 shadow-lg z-50 hidden opacity-0 transform translate-y-2">
+        <div class="grid grid-cols-1 gap-1">
+            <button data-screen="recruit" class="mobile-nav-button w-full justify-start text-left p-2 rounded hover:bg-gray-700"><span>✨</span>Recrutar</button>
+            <button data-screen="ranking" class="mobile-nav-button w-full justify-start text-left p-2 rounded hover:bg-gray-700"><span>🏆</span>Ranking</button>
+            <button data-screen="events" class="mobile-nav-button w-full justify-start text-left p-2 rounded hover:bg-gray-700"><span>🎉</span>Eventos</button>
+            <button data-screen="clan" class="mobile-nav-button w-full justify-start text-left p-2 rounded hover:bg-gray-700"><span>🛡️</span>Clã</button>
+            <button data-screen="admin" class="mobile-nav-button w-full justify-start text-left p-2 rounded hover:bg-gray-700 text-red-400 hidden"><span>⚙️</span>Admin</button>
+        </div>
+    </div>
+
+
+    <script>
+        // --- GAME DATABASE ---
+        const RarityColors = { 1: '#a9b1d6', 2: '#73daca', 3: '#9ece6a', 4: '#e0af68', 5: '#bb9af7' };
+        const QualityTiers = { 1: { color: 'var(--quality-1-color)' }, 2: { color: 'var(--quality-2-color)' }, 3: { color: 'var(--quality-3-color)' }, 4: { color: 'var(--quality-4-color)' }, 5: { color: 'rgb(255,255,255)' } };
+        const EQUIP_SLOTS = ['Arma', 'Elmo', 'Armadura', 'Botas', 'Acessório'];
+
+        const GAME_DB = {
+            characters: {
+                'c001': { name: 'Leo', rarity: 4, atk: 120, def: 80, hp: 1000, speed: 100, image: 'https://placehold.co/150x200/f7768e/1a1b26?text=Leo', role: 'Dano', skill: { name: 'Golpe Furioso', type: 'damage', power: 2, cooldown: 3, description: 'Causa 200% de dano de ATK em um único alvo.' } },
+                'c002': { name: 'Elara', rarity: 5, atk: 150, def: 90, hp: 1100, speed: 120, image: 'https://placehold.co/150x200/bb9af7/1a1b26?text=Elara', role: 'Dano', skill: { name: 'Chuva Estelar', type: 'damage_aoe', power: 0.8, cooldown: 4, description: 'Causa 80% de dano de ATK em todos os inimigos.' } },
+                'c003': { name: 'Grom', rarity: 3, atk: 80, def: 150, hp: 1500, speed: 70, image: 'https://placehold.co/150x200/9ece6a/1a1b26?text=Grom', role: 'Tanque', skill: { name: 'Muralha de Escudos', type: 'buff_def', power: 0.3, cooldown: 4, description: 'Aumenta a DEF de todos os aliados em 30% por 2 turnos.' } },
+                'c004': { name: 'Faye', rarity: 4, atk: 140, def: 70, hp: 900, speed: 130, image: 'https://placehold.co/150x200/7dcfff/1a1b26?text=Faye', role: 'Dano', skill: { name: 'Flecha Precisa', type: 'damage_ignore_def', power: 1.5, cooldown: 3, description: 'Causa 150% de dano de ATK, ignorando 50% da DEF do alvo.' } },
+                'c005': { name: 'Zane', rarity: 5, atk: 160, def: 80, hp: 1000, speed: 115, image: 'https://placehold.co/150x200/ff9e64/1a1b26?text=Zane', role: 'Dano', skill: { name: 'Lâmina das Sombras', type: 'damage', power: 2.2, cooldown: 4, description: 'Causa 220% de dano de ATK em um único alvo.' } },
+                'c006': { name: 'Nia', rarity: 2, atk: 70, def: 60, hp: 800, speed: 90, image: 'https://placehold.co/150x200/73daca/1a1b26?text=Nia', role: 'Suporte', skill: { name: 'Toque Curativo', type: 'heal', power: 3, cooldown: 3, description: 'Cura um aliado em 300% do ATK de Nia.' } },
+                'c007': { name: 'Kael', rarity: 1, atk: 50, def: 50, hp: 600, speed: 80, image: 'https://placehold.co/150x200/a9b1d6/1a1b26?text=Kael', role: 'Dano', skill: { name: 'Golpe Simples', type: 'damage', power: 1.2, cooldown: 2, description: 'Causa 120% de dano de ATK.' } },
+                'c008': { name: 'Seraphina', rarity: 5, atk: 140, def: 100, hp: 1200, speed: 110, image: 'https://placehold.co/150x200/bb9af7/1a1b26?text=Seraphina', role: 'Suporte', skill: { name: 'Bênção Celestial', type: 'heal_aoe', power: 1.5, cooldown: 5, description: 'Cura todos os aliados em 150% do ATK de Seraphina.' } },
+                'c009': { name: 'Jax', rarity: 4, atk: 130, def: 75, hp: 950, speed: 125, image: 'https://placehold.co/150x200/e0af68/1a1b26?text=Jax', role: 'Dano', skill: { name: 'Ataque Duplo', type: 'damage_multi', power: 0.9, hits: 2, cooldown: 3, description: 'Ataca um inimigo 2 vezes, cada golpe causando 90% do ATK.' } },
+                'c010': { name: 'Lyra', rarity: 3, atk: 90, def: 60, hp: 850, speed: 150, image: 'https://placehold.co/150x200/9ece6a/1a1b26?text=Lyra', role: 'Suporte', skill: { name: 'Canção da Celeridade', type: 'buff_speed', power: 0.2, cooldown: 4, description: 'Aumenta a SPEED de todos os aliados em 20% por 2 turnos.' } },
+                'c011': { name: 'Orion', rarity: 5, atk: 170, def: 85, hp: 1050, speed: 100, image: 'https://placehold.co/150x200/bb9af7/1a1b26?text=Orion', role: 'Dano', skill: { name: 'Impacto Cósmico', type: 'damage_aoe', power: 1, cooldown: 5, description: 'Causa 100% de dano de ATK em todos os inimigos.' } },
+                'c012': { name: 'Vesper', rarity: 4, atk: 110, def: 110, hp: 1100, speed: 90, image: 'https://placehold.co/150x200/e0af68/1a1b26?text=Vesper', role: 'Tanque', skill: { name: 'Provocação', type: 'taunt', cooldown: 3, description: 'Provoca todos os inimigos por 1 turno, forçando-os a atacar Vesper.' } },
+            },
+            equipment: {
+                'e001': { name: 'Espada de Aço', type: 'Arma', rarity: 1, stats: { atk: 20 }, image: 'https://placehold.co/64x64/a9b1d6/1a1b26?text=SWD' },
+                'e002': { name: 'Peitoral de Couro', type: 'Armadura', rarity: 1, stats: { def: 30, hp: 100 }, image: 'https://placehold.co/64x64/a9b1d6/1a1b26?text=ARM' },
+                'e003': { name: 'Lâmina do Trovão', type: 'Arma', rarity: 4, stats: { atk: 100, speed: 15 }, image: 'https://placehold.co/64x64/e0af68/1a1b26?text=SWD' },
+                'e004': { name: 'Elmo de Anjo', type: 'Elmo', rarity: 5, stats: { def: 50, hp: 200 }, image: 'https://placehold.co/64x64/bb9af7/1a1b26?text=HELM' },
+                'e005': { name: 'Botas da Rapidez', type: 'Botas', rarity: 3, stats: { speed: 30 }, image: 'https://placehold.co/64x64/9ece6a/1a1b26?text=BOOTS' },
+                'e006': { name: 'Amuleto de Vida', type: 'Acessório', rarity: 2, stats: { hp: 500 }, image: 'https://placehold.co/64x64/73daca/1a1b26?text=AMU' },
+                'e007': { name: 'Cajado Arcano', type: 'Arma', rarity: 3, stats: { atk: 80 }, image: 'https://placehold.co/64x64/9ece6a/1a1b26?text=STAFF' },
+                'e008': { name: 'Armadura de Placas', type: 'Armadura', rarity: 4, stats: { def: 120, hp: 300 }, image: 'https://placehold.co/64x64/e0af68/1a1b26?text=PLATE' },
+                'e009': { name: 'Elmo de Dragão', type: 'Elmo', rarity: 5, stats: { def: 60, atk: 20 }, image: 'https://placehold.co/64x64/bb9af7/1a1b26?text=D-HELM' },
+                'e010': { name: 'Grevas Velozes', type: 'Botas', rarity: 4, stats: { speed: 40, def: 20 }, image: 'https://placehold.co/64x64/e0af68/1a1b26?text=GREAVES' },
+                'e011': { name: 'Anel do Poder', type: 'Acessório', rarity: 5, stats: { atk: 50, hp: 250 }, image: 'https://placehold.co/64x64/bb9af7/1a1b26?text=RING' },
+            },
+            items: {
+                'exp_potion_1': { name: 'Poção de EXP Pequena', image: 'https://placehold.co/64x64/7dcfff/1a1b26?text=EXP', description: 'Concede 100 EXP para um herói ou equipamento.', value: 100 },
+                'refine_stone_1': { name: 'Pedra de Refinamento', image: 'https://placehold.co/64x64/ff9e64/1a1b26?text=RFN', description: 'Usada para refinar heróis e equipamentos.' },
+                'quality_stone_1': { name: 'Fragmento de Estrela', image: 'https://placehold.co/64x64/bb9af7/1a1b26?text=QLT', description: 'Usado para aumentar a qualidade de heróis e equipamentos.' },
+                'skill_tome_1': { name: 'Tomo de Habilidade', image: 'https://placehold.co/64x64/f7768e/1a1b26?text=SKL', description: 'Usado para evoluir habilidades.' },
+            },
+            enemies: {
+                'en001': { name: 'Goblin Ladrão', atk: 40, def: 20, hp: 300, speed: 70, image: 'https://placehold.co/100x120/9ece6a/1a1b26?text=GBL' },
+                'en002': { name: 'Lobo das Sombras', atk: 60, def: 30, hp: 450, speed: 90, image: 'https://placehold.co/100x120/a9b1d6/1a1b26?text=WOLF' },
+                'en003': { name: 'Golem de Pedra', atk: 50, def: 100, hp: 800, speed: 40, image: 'https://placehold.co/100x120/e0af68/1a1b26?text=GLM' },
+                'en004': { name: 'Harpia', atk: 70, def: 25, hp: 400, speed: 110, image: 'https://placehold.co/100x120/f7768e/1a1b26?text=HARPY' },
+                'en005': { name: 'Ogro', atk: 80, def: 70, hp: 1200, speed: 50, image: 'https://placehold.co/100x120/9ece6a/1a1b26?text=OGRE' },
+            },
+            stages: [
+                { name: 'Floresta dos Goblins', enemies: ['en001', 'en001', 'en002'], reward: 100, background: 'https://img.freepik.com/free-vector/dark-forest-landscape-background_1308-106196.jpg?w=900', recommendedBP: 1000 },
+                { name: 'Caverna Sombria', enemies: ['en002', 'en003', 'en002'], reward: 150, background: 'https://img.freepik.com/free-vector/dark-cave-with-crystals-game-background_107791-1753.jpg?w=900', recommendedBP: 2500 },
+                { name: 'Pico das Harpias', enemies: ['en004', 'en004', 'en002'], reward: 200, background: 'https://img.freepik.com/free-vector/mountain-peak-background_1284-12444.jpg?w=740', recommendedBP: 4000 },
+                { name: 'Pântano do Ogro', enemies: ['en005', 'en001', 'en003'], reward: 250, background: 'https://img.freepik.com/free-vector/fantasy-forest-landscape_1048-3162.jpg?w=826', recommendedBP: 6000 },
+                { name: 'Castelo Assombrado', enemies: ['en002', 'en004', 'en005'], reward: 350, background: 'https://img.freepik.com/free-vector/haunted-castle-with-ghosts_107791-1865.jpg?w=826', recommendedBP: 8500 },
+            ]
+        };
+        
+        // --- PLAYER DATA ---
+        let playerData;
+        let currentUser = null;
+        const createUniqueId = (prefix) => `${prefix}-${crypto.randomUUID()}`;
+        
+        function getInitialPlayerData() {
+            return {
+                currency: 1500,
+                characters: {
+                    [createUniqueId('char')]: { id: 'c001', level: 1, exp: 0, refinement: 0, quality: 1, skillLevel: 1, equipped: {}, stat_mods: {}, refine_bonus_stats: {} },
+                    [createUniqueId('char')]: { id: 'c003', level: 1, exp: 0, refinement: 0, quality: 1, skillLevel: 1, equipped: {}, stat_mods: {}, refine_bonus_stats: {} },
+                },
+                equipment: {
+                    [createUniqueId('eq')]: { id: 'e001', level: 1, exp: 0, refinement: 0, quality: 1, equippedTo: null, stat_mods: {}, refine_bonus_stats: {} },
+                },
+                items: {
+                    'exp_potion_1': 10,
+                    'refine_stone_1': 5,
+                    'quality_stone_1': 2,
+                    'skill_tome_1': 3,
+                },
+                formation: [null, null, null, null, null],
+                favoriteCharacter: null,
+                endlessLevel: 1
+            };
+        }
+
+        function savePlayerData() {
+            if (!currentUser) return;
+            localStorage.setItem(`ala_playerData_${currentUser}`, JSON.stringify(playerData));
+        }
+
+        function loadPlayerData() {
+            if (!currentUser) return;
+            const savedData = localStorage.getItem(`ala_playerData_${currentUser}`);
+            if (savedData) {
+                playerData = JSON.parse(savedData);
+                // Data migration for old saves
+                Object.values(playerData.characters).forEach(c => { 
+                    if(!c.stat_mods) c.stat_mods = {};
+                    if(c.level === undefined) { c.level = 1; c.exp = 0; c.refinement = 0; c.quality = 1; }
+                    if(!c.refine_bonus_stats) c.refine_bonus_stats = {};
+                    if(!c.skillLevel) c.skillLevel = 1;
+                });
+                Object.values(playerData.equipment).forEach(e => {
+                     if(!e.stat_mods) e.stat_mods = {}; 
+                     if(e.level === undefined) { e.level = 1; e.exp = 0; e.refinement = 0; e.quality = 1; }
+                     if(!e.refine_bonus_stats) e.refine_bonus_stats = {};
+                });
+                if (playerData.items === undefined) playerData.items = {};
+                if (playerData.endlessLevel === undefined) playerData.endlessLevel = 1;
+                if (playerData.favoriteCharacter === undefined) playerData.favoriteCharacter = null;
+            } else {
+                playerData = getInitialPlayerData();
+                const initialChars = Object.keys(playerData.characters);
+                playerData.formation = [initialChars[0], initialChars[1], null, null, null];
+                playerData.favoriteCharacter = initialChars[0];
+            }
+        }
+        
+        // --- LOGIN ---
+        function handleLogin() {
+            currentUser = localStorage.getItem('ala_currentUser');
+            if (!currentUser) {
+                currentUser = prompt("Por favor, digite seu nome de usuário:", "jogador");
+                if (!currentUser) currentUser = 'jogador'; // Default user
+                localStorage.setItem('ala_currentUser', currentUser);
+            }
+            document.getElementById('username-display').textContent = currentUser;
+            toggleAdminFeatures(currentUser === 'fiore123');
+        }
+        
+        function handleLogout() {
+            localStorage.removeItem('ala_currentUser');
+            currentUser = null;
+            window.location.reload();
+        }
+
+        function toggleAdminFeatures(isAdmin) {
+            document.querySelectorAll('[data-screen="admin"]').forEach(el => {
+                el.style.display = isAdmin ? 'flex' : 'none';
+            });
+        }
+        
+        // --- PROGRESSION CONFIG ---
+        const getRequiredExp = (level) => 100 + (level - 1) * 50;
+        const getRefineCost = (refinement) => (refinement + 1) * 2;
+        const getQualityCost = (quality) => (quality) * 5;
+        const getSkillUpgradeCost = (skillLevel) => skillLevel * 3;
+        const formatNumber = (num) => num.toLocaleString('pt-BR');
+
+        // --- GAME LOGIC (STATS, BP) ---
+        function getCharacterStats(charInstanceId) {
+            const pChar = playerData.characters[charInstanceId];
+            if (!pChar) return {};
+            const baseChar = GAME_DB.characters[pChar.id];
+            
+            let baseStats = { ...baseChar, ...pChar.stat_mods };
+            let totalStats = {};
+
+            // Calculate percentage-based increases from base stats
+            for(const stat in baseStats) {
+                if(typeof baseStats[stat] === 'number' && stat !== 'rarity') {
+                    const levelBonus = baseStats[stat] * (pChar.level - 1) * 0.02; // 2% per level
+                    const refineBonus = baseStats[stat] * pChar.refinement * 0.03; // 3% per refinement
+                    totalStats[stat] = baseStats[stat] + levelBonus + refineBonus;
+                } else {
+                    totalStats[stat] = baseStats[stat];
+                }
+            }
+
+            // Add flat bonus stats from refinement milestones
+            for (const stat in pChar.refine_bonus_stats) {
+                totalStats[stat] = (totalStats[stat] || 0) + pChar.refine_bonus_stats[stat];
+            }
+
+            // Add equipment stats
+            for(const slot of EQUIP_SLOTS){
+                const eqInstanceId = pChar.equipped[slot];
+                if (eqInstanceId && playerData.equipment[eqInstanceId]) {
+                    const eqStats = getEquipmentStats(eqInstanceId);
+                     for (const stat in eqStats) {
+                        if(typeof eqStats[stat] === 'number')
+                            totalStats[stat] = (totalStats[stat] || 0) + eqStats[stat];
+                    }
+                }
+            }
+
+            // Apply quality multiplier at the end
+            const qualityMultiplier = 1 + (pChar.quality - 1) * 0.05; // 5% per quality level
+            totalStats.atk = Math.floor(totalStats.atk * qualityMultiplier);
+            totalStats.def = Math.floor(totalStats.def * qualityMultiplier);
+            totalStats.hp = Math.floor(totalStats.hp * qualityMultiplier);
+
+            return totalStats;
+        }
+
+        function getEquipmentStats(eqInstanceId) {
+            const pEq = playerData.equipment[eqInstanceId];
+            if (!pEq) return {};
+            const baseEq = GAME_DB.equipment[pEq.id];
+            
+            let baseStats = { ...baseEq.stats, ...pEq.stat_mods };
+            let totalStats = {};
+            
+            for(const stat in baseStats) {
+                 if(typeof baseStats[stat] === 'number') {
+                    const levelBonus = baseStats[stat] * (pEq.level - 1) * 0.02;
+                    const refineBonus = baseStats[stat] * pEq.refinement * 0.03;
+                    totalStats[stat] = baseStats[stat] + levelBonus + refineBonus;
+                 }
+            }
+
+            // Add flat bonus stats from refinement milestones
+             for (const stat in pEq.refine_bonus_stats) {
+                totalStats[stat] = (totalStats[stat] || 0) + pEq.refine_bonus_stats[stat];
+            }
+
+            // Apply quality multiplier
+            const qualityMultiplier = 1 + (pEq.quality - 1) * 0.05;
+            for(const stat in totalStats) {
+                totalStats[stat] = Math.floor(totalStats[stat] * qualityMultiplier);
+            }
+
+            return totalStats;
+        }
+
+        function calculateBP(charInstanceId) {
+            if (!charInstanceId) return 0;
+            const stats = getCharacterStats(charInstanceId);
+            return Math.floor((stats.atk || 0) * 2 + (stats.def || 0) * 2.5 + (stats.hp || 0) / 10 + (stats.speed || 0) * 1.5);
+        }
+
+        function calculateTotalBP() {
+            return playerData.formation.reduce((total, id) => total + calculateBP(id), 0);
+        }
+
+        // --- BATTLE LOGIC ---
+        let battleState = {};
+        let currentBattleSpeed = 1;
+        
+        function getCombatantStats(combatant) {
+            return combatant.isPlayer ? getCharacterStats(combatant.instanceId) : combatant.stats;
+        }
+
+        function startBattle(stageIndex) {
+            const stage = GAME_DB.stages[stageIndex];
+            if (playerData.formation.filter(id => id).length === 0) {
+                alert("Sua formação está vazia! Vá para a tela de Formação para adicionar heróis.");
+                return;
+            }
+            battleState = {
+                type: 'stage',
+                playerTeam: playerData.formation.filter(id => id).map(id => ({ instanceId: id, currentHp: getCharacterStats(id).hp, isPlayer: true, skillCooldownTimer: 0 })),
+                enemyTeam: stage.enemies.map((id, index) => ({ instanceId: `${id}-${index}`, baseId: id, stats: GAME_DB.enemies[id], currentHp: GAME_DB.enemies[id].hp, isPlayer: false })),
+                turnQueue: [], 
+                battleSpeed: currentBattleSpeed, 
+                isBattleOver: false, 
+                stageIndex: stageIndex
+            };
+            
+            renderBattleArena(stage);
+            switchScreen('battle-arena');
+            setTimeout(runBattleLoop, 1000);
+        }
+        
+        function generateEndlessEnemies(level) {
+            const enemyPool = Object.keys(GAME_DB.enemies);
+            const enemyCount = Math.min(5, 1 + Math.floor(level / 5));
+            const enemies = [];
+            for (let i = 0; i < enemyCount; i++) {
+                const baseId = enemyPool[Math.floor(Math.random() * enemyPool.length)];
+                const baseEnemy = GAME_DB.enemies[baseId];
+                const scaledStats = {};
+                for (const stat in baseEnemy) {
+                    if (typeof baseEnemy[stat] === 'number') {
+                        scaledStats[stat] = Math.floor(baseEnemy[stat] * (1 + (level - 1) * 0.15));
+                    } else {
+                        scaledStats[stat] = baseEnemy[stat];
+                    }
+                }
+                enemies.push({
+                    instanceId: `endless-${baseId}-${i}`,
+                    baseId: baseId,
+                    stats: scaledStats,
+                    currentHp: scaledStats.hp,
+                    isPlayer: false
+                });
+            }
+            return enemies;
+        }
+
+        function startEndlessBattle() {
+            if (playerData.formation.filter(id => id).length === 0) {
+                alert("Sua formação está vazia! Vá para a tela de Formação para adicionar heróis.");
+                return;
+            }
+            
+            const enemies = generateEndlessEnemies(playerData.endlessLevel);
+            const mockStage = {
+                name: `Desafio Infinito - Nível ${playerData.endlessLevel}`,
+                background: GAME_DB.stages[Math.floor(Math.random() * GAME_DB.stages.length)].background
+            };
+            battleState = {
+                type: 'endless',
+                playerTeam: playerData.formation.filter(id => id).map(id => ({ instanceId: id, currentHp: getCharacterStats(id).hp, isPlayer: true, skillCooldownTimer: 0 })),
+                enemyTeam: enemies,
+                turnQueue: [], 
+                battleSpeed: currentBattleSpeed, 
+                isBattleOver: false,
+                background: mockStage.background // Store background for re-renders
+            };
+            
+            renderBattleArena(mockStage);
+            switchScreen('battle-arena');
+            setTimeout(runBattleLoop, 1000);
+        }
+        
+        function continueEndlessBattle() {
+            playerData.endlessLevel++;
+            const reward = 50 + (playerData.endlessLevel - 1) * 10;
+            playerData.currency += reward;
+            savePlayerData();
+            updateUI(); // To show currency update
+
+            const enemies = generateEndlessEnemies(playerData.endlessLevel);
+            const mockStage = {
+                name: `Desafio Infinito - Nível ${playerData.endlessLevel}`,
+                background: battleState.background
+            };
+            battleState = {
+                type: 'endless',
+                playerTeam: playerData.formation.filter(id => id).map(id => ({ instanceId: id, currentHp: getCharacterStats(id).hp, isPlayer: true, skillCooldownTimer: 0 })),
+                enemyTeam: enemies,
+                turnQueue: [],
+                battleSpeed: currentBattleSpeed,
+                isBattleOver: false,
+                background: battleState.background
+            };
+            
+            // Only re-render the battle screen if the user is currently on it
+            if(document.getElementById('battle-arena-screen').classList.contains('active')) {
+                renderBattleArena(mockStage);
+            }
+            
+            setTimeout(runBattleLoop, 1000);
+        }
+
+        async function runBattleLoop() {
+            if (battleState.isBattleOver) return;
+
+            if (battleState.turnQueue.length === 0) {
+                const allCombatants = [...battleState.playerTeam, ...battleState.enemyTeam].filter(c => c.currentHp > 0);
+                allCombatants.sort((a, b) => getCombatantStats(b).speed - getCombatantStats(a).speed);
+                battleState.turnQueue = allCombatants;
+            }
+
+            const attacker = battleState.turnQueue.shift();
+            if (attacker && attacker.currentHp > 0) {
+                
+                // Skill Logic
+                const canUseSkill = attacker.isPlayer && attacker.skillCooldownTimer <= 0;
+                
+                if (canUseSkill) {
+                     await useSkill(attacker);
+                } else {
+                    const targetPool = (attacker.isPlayer ? battleState.enemyTeam : battleState.playerTeam).filter(c => c.currentHp > 0);
+                    if (targetPool.length > 0) {
+                        const target = targetPool[Math.floor(Math.random() * targetPool.length)];
+                        await performAttack(attacker, target);
+                    }
+                }
+                
+                if(attacker.isPlayer) {
+                    attacker.skillCooldownTimer = Math.max(0, attacker.skillCooldownTimer - 1);
+                }
+            }
+            
+            const isVictory = battleState.enemyTeam.every(c => c.currentHp <= 0);
+            const isDefeat = battleState.playerTeam.every(c => c.currentHp <= 0);
+
+            if (isVictory || isDefeat) {
+                battleState.isBattleOver = true;
+                setTimeout(() => showBattleResult(isVictory), 1000 / battleState.battleSpeed);
+            } else {
+                setTimeout(runBattleLoop, 2000 / battleState.battleSpeed);
+            }
+        }
+        
+        async function useSkill(attacker) {
+            const pChar = playerData.characters[attacker.instanceId];
+            const baseChar = GAME_DB.characters[pChar.id];
+            const skill = baseChar.skill;
+            const attackerStats = getCharacterStats(attacker.instanceId);
+            
+            const attackerElement = document.querySelector(`[data-combatant-id="${attacker.instanceId}"]`);
+            if (attackerElement) {
+                attackerElement.classList.add('skill-cast');
+                setTimeout(() => attackerElement.classList.remove('skill-cast'), 500);
+            }
+            
+            showSkillName(attacker, skill.name);
+
+            // Skill logic
+            switch(skill.type) {
+                case 'damage': {
+                    const target = battleState.enemyTeam.filter(c => c.currentHp > 0)[0];
+                    if(target) {
+                         let damage = attackerStats.atk * skill.power * (1 + (pChar.skillLevel-1) * 0.1);
+                         damage = Math.floor(damage);
+                         target.currentHp = Math.max(0, target.currentHp - damage);
+                         updateHealthBar(target);
+                         showDamageNumber(damage, 'damage');
+                    }
+                    break;
+                }
+                case 'heal': {
+                    let lowestHpAlly = battleState.playerTeam.filter(c => c.currentHp > 0).sort((a, b) => a.currentHp - b.currentHp)[0];
+                    if(lowestHpAlly) {
+                        const allyStats = getCharacterStats(lowestHpAlly.instanceId);
+                        let healAmount = attackerStats.atk * skill.power * (1 + (pChar.skillLevel-1) * 0.1);
+                        healAmount = Math.floor(healAmount);
+                        lowestHpAlly.currentHp = Math.min(allyStats.hp, lowestHpAlly.currentHp + healAmount);
+                        updateHealthBar(lowestHpAlly);
+                        showDamageNumber(healAmount, 'heal');
+                    }
+                    break;
+                }
+                // Add more skill types here later (buff, aoe, etc.)
+            }
+            
+            attacker.skillCooldownTimer = skill.cooldown;
+            return Promise.resolve();
+        }
+        
+        function performAttack(attacker, target) {
+            return new Promise(resolve => {
+                const attackerStats = getCombatantStats(attacker);
+                const targetStats = getCombatantStats(target);
+                const attackerElement = document.querySelector(`[data-combatant-id="${attacker.instanceId}"]`);
+                
+                if(!attackerElement) {
+                    resolve();
+                    return;
+                }
+
+                attackerElement.classList.add('attacking', attacker.isPlayer ? 'player' : 'enemy');
+
+                setTimeout(() => {
+                    attackerElement.classList.remove('attacking', 'player', 'enemy');
+                    
+                    let damage = Math.max(1, attackerStats.atk - (targetStats.def/2)); // Defesa é 50% efetiva
+                    damage = Math.floor(damage * (Math.random() * 0.2 + 0.9));
+
+                    target.currentHp = Math.max(0, target.currentHp - damage);
+                    updateHealthBar(target);
+                    showDamageNumber(damage, 'damage');
+                    
+                    const targetElement = document.querySelector(`[data-combatant-id="${target.instanceId}"]`);
+                    if (target.currentHp <= 0 && targetElement) {
+                         targetElement.classList.add('dead');
+                    }
+                    resolve();
+                }, 300 / battleState.battleSpeed);
+            });
+        }
+        
+        // --- MODAL & DETAIL LOGIC ---
+        function setFavoriteCharacter(charInstanceId) {
+            playerData.favoriteCharacter = charInstanceId;
+            savePlayerData();
+            updateUI();
+            alert("Herói favoritado com sucesso!");
+            document.getElementById('character-detail-modal').classList.add('hidden');
+        }
+
+        function handleUnequipAction(charInstanceId, slotType) {
+            const pChar = playerData.characters[charInstanceId];
+            const eqInstanceId = pChar.equipped[slotType];
+
+            if (eqInstanceId && playerData.equipment[eqInstanceId]) {
+                playerData.equipment[eqInstanceId].equippedTo = null;
+            }
+            delete pChar.equipped[slotType];
+            
+            openCharacterDetailModal(charInstanceId); // Refresh detail modal
+            savePlayerData();
+            updateUI();
+        }
+
+        function equipItem(charInstanceId, eqInstanceId, slotType) {
+            const pEq = playerData.equipment[eqInstanceId];
+            if(pEq.equippedTo) {
+                const otherChar = playerData.characters[pEq.equippedTo];
+                if(otherChar) {
+                    for(const s in otherChar.equipped) {
+                        if(otherChar.equipped[s] === eqInstanceId) {
+                            delete otherChar.equipped[s];
+                        }
+                    }
+                }
+            }
+
+            const charToUpdate = playerData.characters[charInstanceId];
+            const currentItemInSlot = charToUpdate.equipped[slotType];
+            if(currentItemInSlot) {
+                playerData.equipment[currentItemInSlot].equippedTo = null;
+            }
+
+            charToUpdate.equipped[slotType] = eqInstanceId;
+            playerData.equipment[eqInstanceId].equippedTo = charInstanceId;
+
+            document.getElementById('equip-select-modal').classList.add('hidden');
+            openCharacterDetailModal(charInstanceId); 
+            savePlayerData();
+            updateUI();
+        }
+
+        function handleEquipAction(charInstanceId, slotType) {
+            const modal = document.getElementById('equip-select-modal');
+            const availableEquip = Object.entries(playerData.equipment)
+                .filter(([id, eq]) => !eq.equippedTo && GAME_DB.equipment[eq.id].type === slotType);
+
+            let contentHTML = '<p class="col-span-full text-center text-gray-400">Nenhum equipamento disponível deste tipo.</p>';
+            if (availableEquip.length > 0) {
+                contentHTML = availableEquip.map(([eqInstanceId, pEq]) => {
+                    const baseEq = GAME_DB.equipment[pEq.id];
+                    return `
+                        <div onclick="equipItem('${charInstanceId}', '${eqInstanceId}', '${slotType}')" class="bg-black/40 p-2 rounded-lg text-center border-2 rarity-${baseEq.rarity} cursor-pointer hover:bg-primary/30">
+                            <img src="${baseEq.image}" alt="${baseEq.name}" class="w-16 h-16 mx-auto rounded">
+                            <p class="text-xs font-semibold mt-1 truncate">${baseEq.name}</p>
+                            <p class="text-xs text-gray-300">
+                                ${Object.entries(getEquipmentStats(eqInstanceId)).map(([stat, val]) => `${stat.toUpperCase()}: +${val}`).join(', ')}
+                            </p>
+                        </div>`;
+                }).join('');
+            }
+
+            modal.innerHTML = `
+                <div class="bg-gray-800 p-4 rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto">
+                    <h2 class="text-xl font-bold mb-4">Selecione um Equipamento (${slotType})</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        ${contentHTML}
+                    </div>
+                    <button onclick="document.getElementById('equip-select-modal').classList.add('hidden')" class="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Cancelar</button>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function renderQualityStars(quality) {
+            if (quality <= 0) return '';
+            const tier = Math.min(5, Math.ceil(quality / 5));
+            const starsInTier = quality % 5 === 0 ? 5 : quality % 5;
+            const color = QualityTiers[tier].color;
+            return `<span style="color: ${color}; text-shadow: 0 0 5px ${color};">${'★'.repeat(starsInTier)}</span>`;
+        }
+
+        function openCharacterDetailModal(charInstanceId) {
+            const modal = document.getElementById('character-detail-modal');
+            const pChar = playerData.characters[charInstanceId];
+            if (!pChar) return;
+            const baseChar = GAME_DB.characters[pChar.id];
+            const stats = getCharacterStats(charInstanceId);
+            const isFavorite = playerData.favoriteCharacter === charInstanceId;
+            const requiredExp = getRequiredExp(pChar.level);
+            const tier = Math.min(5, Math.ceil(pChar.quality / 5));
+
+            modal.innerHTML = `
+                <div class="bg-gray-800 p-4 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative border-2 border-primary shadow-lg shadow-primary/20">
+                    <button onclick="document.getElementById('character-detail-modal').classList.add('hidden')" class="absolute top-2 right-2 text-white bg-red-600 rounded-full h-8 w-8 font-bold z-10">X</button>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-1 text-center">
+                            <img src="${baseChar.image}" alt="${baseChar.name}" class="rounded-lg w-full rarity-${baseChar.rarity} border-4 quality-tier-${tier}">
+                            <h2 class="text-2xl font-bold mt-2">${baseChar.name}</h2>
+                            <p class="h-6">${renderQualityStars(pChar.quality)}</p>
+                            <p class="text-xl font-bold text-yellow-300">BP ${formatNumber(calculateBP(charInstanceId))}</p>
+                            <button ${isFavorite ? 'disabled' : ''} onclick="setFavoriteCharacter('${charInstanceId}')" class="mt-2 w-full font-bold py-2 px-4 rounded ${isFavorite ? 'bg-yellow-500 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-600 text-black'}">
+                                ${isFavorite ? '★ Favorito' : 'Definir Favorito'}
+                            </button>
+                        </div>
+                        <div class="md:col-span-2">
+                            <!-- Progression -->
+                            <div class="bg-black/20 p-2 rounded-lg mb-2">
+                                <p class="text-sm font-semibold">Nível ${pChar.level}</p>
+                                <div class="progress-bar-bg my-1"><div class="progress-bar-fill h-2" style="width: ${pChar.exp / requiredExp * 100}%"></div></div>
+                                <p class="text-xs text-right">${formatNumber(pChar.exp)} / ${formatNumber(requiredExp)} EXP</p>
+                                
+                                <p class="text-sm font-semibold mt-2">Refinamento: +${pChar.refinement}</p>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                                <button onclick="openUpgradeModal('character', '${charInstanceId}', 'level')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm font-bold">LeveleUp</button>
+                                <button onclick="openUpgradeModal('character', '${charInstanceId}', 'refine')" class="bg-green-600 hover:bg-green-700 p-2 rounded text-sm font-bold">Refinar</button>
+                                <button onclick="openUpgradeModal('character', '${charInstanceId}', 'quality')" class="bg-purple-600 hover:bg-purple-700 p-2 rounded text-sm font-bold">Qualidade</button>
+                                <button onclick="openUpgradeModal('character', '${charInstanceId}', 'skill')" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm font-bold">Evoluir Skill</button>
+                            </div>
+                            
+                            <h3 class="font-bold text-lg mb-2">Equipamentos</h3>
+                            <div class="grid grid-cols-3 gap-2 mb-4">
+                                ${EQUIP_SLOTS.map(slotType => {
+                                    const eqInstanceId = pChar.equipped[slotType];
+                                    if (eqInstanceId) {
+                                        const baseEq = GAME_DB.equipment[playerData.equipment[eqInstanceId].id];
+                                        return `<div class="bg-black/40 p-2 rounded-lg text-center border-2 rarity-${baseEq.rarity}"><img src="${baseEq.image}" class="w-16 h-16 mx-auto rounded"><p class="text-xs font-semibold mt-1 truncate">${baseEq.name}</p><button onclick="handleUnequipAction('${charInstanceId}', '${slotType}')" class="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded mt-1 w-full">Desequipar</button></div>`;
+                                    } else {
+                                        return `<div onclick="handleEquipAction('${charInstanceId}', '${slotType}')" class="bg-black/40 p-2 rounded-lg text-center border-2 border-dashed border-gray-600 flex flex-col justify-center items-center cursor-pointer hover:bg-primary/20 min-h-[120px]"><p class="text-gray-400 text-2xl">+</p><p class="text-xs text-gray-500">${slotType}</p></div>`;
+                                    }
+                                }).join('')}
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">Status</h3>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm bg-black/20 p-2 rounded mb-4">
+                                <span>❤️ HP:</span> <span class="font-semibold text-right">${formatNumber(stats.hp)}</span>
+                                <span>⚔️ Ataque:</span> <span class="font-semibold text-right">${formatNumber(stats.atk)}</span>
+                                <span>🛡️ Defesa:</span> <span class="font-semibold text-right">${formatNumber(stats.def)}</span>
+                                <span>⚡ Velocidade:</span> <span class="font-semibold text-right">${formatNumber(stats.speed)}</span>
+                            </div>
+                             <h3 class="font-bold text-lg mb-2">Habilidade</h3>
+                            <div class="bg-black/20 p-2 rounded text-sm">
+                                <p class="font-bold">${baseChar.skill.name} - Nv. ${pChar.skillLevel}</p>
+                                <p class="text-xs text-gray-400">${baseChar.skill.description}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function openEquipmentDetailModal(eqInstanceId) {
+            const modal = document.getElementById('equipment-detail-modal');
+            const pEq = playerData.equipment[eqInstanceId];
+            if (!pEq) return;
+            const baseEq = GAME_DB.equipment[pEq.id];
+            const stats = getEquipmentStats(eqInstanceId);
+            const requiredExp = getRequiredExp(pEq.level);
+            const equippedByCharId = pEq.equippedTo;
+            let equippedByText = 'Ninguém';
+            if (equippedByCharId && playerData.characters[equippedByCharId]) {
+                equippedByText = GAME_DB.characters[playerData.characters[equippedByCharId].id].name;
+            }
+            const tier = Math.min(5, Math.ceil(pEq.quality / 5));
+
+            modal.innerHTML = `
+                <div class="bg-gray-800 p-4 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative border-2 border-secondary shadow-lg shadow-secondary/20">
+                    <button onclick="document.getElementById('equipment-detail-modal').classList.add('hidden')" class="absolute top-2 right-2 text-white bg-red-600 rounded-full h-8 w-8 font-bold z-10">X</button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="text-center">
+                             <img src="${baseEq.image}" alt="${baseEq.name}" class="rounded-lg w-full max-w-[150px] mx-auto rarity-${baseEq.rarity} border-4 quality-tier-${tier}">
+                             <h2 class="text-xl font-bold mt-2">${baseEq.name}</h2>
+                             <p class="h-6">${renderQualityStars(pEq.quality)}</p>
+                             <div class="flex flex-col gap-2 mt-4">
+                                <button onclick="openUpgradeModal('equipment', '${eqInstanceId}', 'level')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-sm font-bold w-full">Level Up</button>
+                                <button onclick="openUpgradeModal('equipment', '${eqInstanceId}', 'refine')" class="bg-green-600 hover:bg-green-700 p-2 rounded text-sm font-bold w-full">Refinar</button>
+                                <button onclick="openUpgradeModal('equipment', '${eqInstanceId}', 'quality')" class="bg-purple-600 hover:bg-purple-700 p-2 rounded text-sm font-bold w-full">Qualidade</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="bg-black/20 p-2 rounded-lg mb-4">
+                                <p class="text-sm font-semibold">Nível ${pEq.level}</p>
+                                <div class="progress-bar-bg my-1"><div class="progress-bar-fill h-2" style="width: ${pEq.exp / requiredExp * 100}%"></div></div>
+                                <p class="text-xs text-right">${formatNumber(pEq.exp)} / ${formatNumber(requiredExp)} EXP</p>
+                                <p class="text-sm font-semibold mt-2">Refinamento: +${pEq.refinement}</p>
+                            </div>
+                             <h3 class="font-bold text-lg mb-2">Status</h3>
+                            <div class="grid grid-cols-2 gap-x-4 text-sm bg-black/20 p-2 rounded mb-4">
+                                ${Object.entries(stats).map(([stat, val]) => {
+                                    if(typeof val === 'number') return `<span>${stat.toUpperCase()}:</span> <span class="font-semibold text-right">+${formatNumber(val)}</span>`;
+                                    return '';
+                                }).join('')}
+                            </div>
+                             <p class="text-sm">Equipado por: <span class="font-semibold">${equippedByText}</span></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function openUpgradeModal(type, instanceId, upgradeType) {
+            const modal = document.getElementById('upgrade-modal');
+            const target = (type === 'character') ? playerData.characters[instanceId] : playerData.equipment[instanceId];
+            if (!target) return;
+
+            let title, cost, itemId, contentHTML = '';
+
+            switch(upgradeType) {
+                case 'level':
+                    title = 'LeveleUp';
+                    const expPotions = Object.entries(playerData.items).filter(([id, qty]) => id.startsWith('exp_potion') && qty > 0);
+                    if (expPotions.length > 0) {
+                        contentHTML = expPotions.map(([id, qty]) => {
+                            const itemInfo = GAME_DB.items[id];
+                            return `<div class="flex justify-between items-center bg-black/20 p-2 rounded">
+                                <div>
+                                    <p>${itemInfo.name} (Possui: ${qty})</p>
+                                    <p class="text-xs text-gray-400">EXP: ${itemInfo.value}</p>
+                                </div>
+                                <button onclick="performUpgrade('${type}', '${instanceId}', 'level', '${id}', 1)" class="bg-blue-600 hover:bg-blue-700 p-2 rounded text-xs">Usar x1</button>
+                            </div>`;
+                        }).join('<div class="my-2"></div>');
+                    } else {
+                        contentHTML = '<p class="text-center text-gray-400">Você não possui poções de EXP.</p>';
+                    }
+                    break;
+                case 'refine':
+                    title = 'Refinar';
+                    itemId = 'refine_stone_1';
+                    cost = getRefineCost(target.refinement);
+                    const currentRefineStones = playerData.items[itemId] || 0;
+                    contentHTML = `<p class="text-center">Custo: ${cost} x Pedras de Refinamento</p>
+                                 <p class="text-center font-bold ${currentRefineStones >= cost ? 'text-green-400' : 'text-red-400'}">(${currentRefineStones} / ${cost})</p>
+                                 <p class="text-xs text-center text-gray-400 mt-2">A cada 5 níveis de refinamento, um novo bônus de status é adicionado.</p>
+                                 <button ${currentRefineStones < cost ? 'disabled' : ''} onclick="performUpgrade('${type}', '${instanceId}', 'refine')" class="w-full mt-4 p-2 rounded font-bold ${currentRefineStones < cost ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}">Confirmar Refinamento</button>`;
+                    break;
+                case 'quality':
+                    title = 'Aumentar Qualidade';
+                    itemId = 'quality_stone_1';
+                    cost = getQualityCost(target.quality);
+                    const currentQualityStones = playerData.items[itemId] || 0;
+                     contentHTML = `<p class="text-center">Custo: ${cost} x Fragmentos de Estrela</p>
+                                 <p class="text-center font-bold ${currentQualityStones >= cost ? 'text-green-400' : 'text-red-400'}">(${currentQualityStones} / ${cost})</p>
+                                 <button ${currentQualityStones < cost || target.quality >= 25 ? 'disabled' : ''} onclick="performUpgrade('${type}', '${instanceId}', 'quality')" class="w-full mt-4 p-2 rounded font-bold ${currentQualityStones < cost || target.quality >= 25 ? 'bg-gray-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'}">Confirmar Aumento</button>`;
+                    break;
+                 case 'skill':
+                    title = 'Evoluir Habilidade';
+                    itemId = 'skill_tome_1';
+                    cost = getSkillUpgradeCost(target.skillLevel);
+                    const currentSkillTomes = playerData.items[itemId] || 0;
+                     contentHTML = `<p class="text-center">Custo: ${cost} x Tomos de Habilidade</p>
+                                 <p class="text-center font-bold ${currentSkillTomes >= cost ? 'text-green-400' : 'text-red-400'}">(${currentSkillTomes} / ${cost})</p>
+                                 <button ${currentSkillTomes < cost ? 'disabled' : ''} onclick="performUpgrade('${type}', '${instanceId}', 'skill')" class="w-full mt-4 p-2 rounded font-bold ${currentSkillTomes < cost ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}">Confirmar Evolução</button>`;
+                    break;
+            }
+
+             modal.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-lg max-w-md w-full relative">
+                     <button onclick="document.getElementById('upgrade-modal').classList.add('hidden')" class="absolute top-2 right-2 text-white bg-red-600 rounded-full h-8 w-8 font-bold z-10">X</button>
+                     <h2 class="text-xl font-bold mb-4 text-center">${title}</h2>
+                     <div class="space-y-2">${contentHTML}</div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function performUpgrade(type, instanceId, upgradeType, itemId, amount) {
+            const target = (type === 'character') ? playerData.characters[instanceId] : playerData.equipment[instanceId];
+            if(!target) return;
+
+            switch(upgradeType) {
+                case 'level':
+                    if((playerData.items[itemId] || 0) >= amount) {
+                        playerData.items[itemId] -= amount;
+                        target.exp += GAME_DB.items[itemId].value * amount;
+                        let requiredExp = getRequiredExp(target.level);
+                        while(target.exp >= requiredExp) {
+                            target.exp -= requiredExp;
+                            target.level++;
+                            requiredExp = getRequiredExp(target.level);
+                        }
+                    } else { alert("Itens insuficientes!"); }
+                    break;
+                case 'refine':
+                    const refineCost = getRefineCost(target.refinement);
+                    const refineItemId = 'refine_stone_1';
+                    if((playerData.items[refineItemId] || 0) >= refineCost) {
+                        playerData.items[refineItemId] -= refineCost;
+                        target.refinement++;
+
+                        if(target.refinement % 5 === 0) {
+                            const possibleStats = ['atk', 'def', 'hp', 'speed'];
+                            const randomStat = possibleStats[Math.floor(Math.random() * possibleStats.length)];
+                            const value = (randomStat === 'hp' ? 20 : (randomStat === 'speed' ? 1 : 2)) * target.refinement;
+                            target.refine_bonus_stats[randomStat] = (target.refine_bonus_stats[randomStat] || 0) + value;
+                            alert(`Novo bônus de refinamento adquirido: ${randomStat.toUpperCase()} +${value}!`);
+                        }
+
+                    } else { alert("Itens insuficientes!"); }
+                    break;
+                case 'quality':
+                    if (target.quality >= 25) { alert("Qualidade máxima atingida!"); return; }
+                    const qualityCost = getQualityCost(target.quality);
+                    const qualityItemId = 'quality_stone_1';
+                    if((playerData.items[qualityItemId] || 0) >= qualityCost) {
+                        playerData.items[qualityItemId] -= qualityCost;
+                        target.quality++;
+                    } else { alert("Itens insuficientes!"); }
+                    break;
+                case 'skill':
+                    const skillCost = getSkillUpgradeCost(target.skillLevel);
+                    const skillItemId = 'skill_tome_1';
+                    if((playerData.items[skillItemId] || 0) >= skillCost) {
+                        playerData.items[skillItemId] -= skillCost;
+                        target.skillLevel++;
+                    } else { alert("Itens insuficientes!"); }
+                    break;
+            }
+            
+            savePlayerData();
+            document.getElementById('upgrade-modal').classList.add('hidden');
+            if(type === 'character') openCharacterDetailModal(instanceId);
+            else openEquipmentDetailModal(instanceId);
+            updateUI();
+        }
+
+        // --- UI & RENDERING ---
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const screen = document.getElementById(`${screenId}-screen`);
+            if(screen) screen.classList.add('active');
+            
+            document.querySelectorAll('.mobile-nav-button[data-screen], .nav-button, #mobile-more-menu button').forEach(b => b.classList.remove('active'));
+            
+            const activateButton = (selector) => {
+                const btn = document.querySelector(selector);
+                if (btn) btn.classList.add('active');
+            }
+            activateButton(`.nav-button[data-screen="${screenId}"]`);
+            activateButton(`.mobile-nav-button[data-screen="${screenId}"]`);
+            activateButton(`#mobile-more-menu button[data-screen="${screenId}"]`);
+            
+            const isMoreScreen = ['recruit', 'ranking', 'events', 'clan', 'admin'].includes(screenId);
+            if (isMoreScreen) {
+                const moreBtn = document.getElementById('mobile-more-btn');
+                if(moreBtn) moreBtn.classList.add('active');
+            }
+            
+            switch (screenId) {
+                case 'home': renderHomeScreen(); break;
+                case 'battle': renderStageSelection(); break;
+                case 'characters': renderCharacterCollection(); break;
+                case 'formation': renderFormationScreen(); break;
+                case 'inventory': renderInventoryScreen(); break;
+                case 'recruit': renderRecruitScreen(); break;
+                case 'ranking': renderRankingScreen(); break;
+                case 'events': renderEventsScreen(); break;
+                case 'clan': renderClanScreen(); break;
+                case 'admin': renderAdminScreen(); break;
+                 case 'battle-arena':
+                    if (battleState.type) { 
+                        const stageName = battleState.type === 'stage' ? GAME_DB.stages[battleState.stageIndex].name : `Desafio Infinito - Nível ${playerData.endlessLevel}`;
+                        const stageBg = battleState.background || GAME_DB.stages[0].background;
+                        renderBattleArena({ name: stageName, background: stageBg });
+                    }
+                    break;
+            }
+             
+            const moreMenu = document.getElementById('mobile-more-menu');
+            if(moreMenu && !moreMenu.classList.contains('hidden')) {
+                moreMenu.classList.add('hidden', 'opacity-0', 'translate-y-2');
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('player-currency').innerText = formatNumber(playerData.currency);
+            const currentScreen = document.querySelector('.screen.active');
+            if (currentScreen) {
+                const screenId = currentScreen.id.replace('-screen', '');
+                // Re-render the current screen to reflect changes
+                switch (screenId) {
+                    case 'home': renderHomeScreen(); break;
+                    case 'battle': renderStageSelection(); break;
+                    case 'characters': renderCharacterCollection(); break;
+                    case 'formation': renderFormationScreen(); break;
+                    case 'inventory': renderInventoryScreen(); break;
+                    case 'recruit': renderRecruitScreen(); break;
+                    case 'ranking': renderRankingScreen(); break;
+                    case 'events': renderEventsScreen(); break;
+                    case 'clan': renderClanScreen(); break;
+                    case 'admin': renderAdminScreen(); break;
+                }
+            }
+        }
+        
+        function renderHomeScreen() {
+            const container = document.getElementById('home-screen');
+            let favoriteCharId = playerData.favoriteCharacter;
+
+            if (!favoriteCharId || !playerData.characters[favoriteCharId]) {
+                const firstFormationChar = playerData.formation.find(id => id);
+                const firstCollectionChar = Object.keys(playerData.characters)[0];
+                favoriteCharId = firstFormationChar || firstCollectionChar;
+            }
+
+            let contentHTML = `
+                <div class="text-center py-8">
+                    <p class="text-lg text-gray-400">Você ainda não tem heróis.</p>
+                    <p class="text-sm text-gray-500">Vá para a tela de Recrutar para conseguir seu primeiro herói!</p>
+                </div>
+            `;
+
+            if (favoriteCharId) {
+                const pChar = playerData.characters[favoriteCharId];
+                const baseChar = GAME_DB.characters[pChar.id];
+                const recommendedBP = 800 + (playerData.endlessLevel - 1) * 400;
+                const currentBP = calculateTotalBP();
+                 contentHTML = `
+                    <div class="flex flex-col items-center justify-center text-center min-h-[60vh]">
+                        <img src="${baseChar.image}" alt="${baseChar.name}" class="home-character-display">
+                        <div class="bg-black/30 p-4 rounded-lg w-full max-w-md">
+                             <h2 class="text-2xl font-bold text-white">Desafio Infinito</h2>
+                             <p class="text-yellow-300 font-semibold text-lg mb-2">Nível ${playerData.endlessLevel}</p>
+                             <div class="text-sm">
+                                 <p class="text-gray-400">PB Recomendado: ${formatNumber(recommendedBP)}</p>
+                                 <p class="font-semibold ${currentBP < recommendedBP ? 'text-red-400' : 'text-green-400'}">Seu PB: ${formatNumber(currentBP)}</p>
+                             </div>
+                             <button onclick="startEndlessBattle()" class="btn-grad font-bold py-3 px-10 rounded-lg mt-4 text-xl">Lutar</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = contentHTML;
+        }
+
+        function renderStageSelection() {
+            const container = document.getElementById('battle-screen');
+            const currentBP = calculateTotalBP();
+            container.innerHTML = `
+                <h2 class="text-xl font-bold mb-4 text-white">Modo Campanha</h2>
+                <div id="stage-selection" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    ${GAME_DB.stages.map((stage, index) => `
+                        <div class="bg-black/30 rounded-lg overflow-hidden cursor-pointer hover:border-primary border-2 border-transparent transition-all" onclick="startBattle(${index})">
+                            <img src="${stage.background}" alt="${stage.name}" class="w-full h-32 object-cover">
+                            <div class="p-4">
+                                <h3 class="font-bold text-lg">${stage.name}</h3>
+                                <p class="text-sm text-gray-400">PB Recomendado: ${formatNumber(stage.recommendedBP)}</p>
+                                <p class="text-sm font-semibold ${currentBP < stage.recommendedBP ? 'text-red-400' : 'text-green-400'}">Seu PB: ${formatNumber(currentBP)}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
+        }
+
+        function renderBattleArena(stage) {
+            const container = document.getElementById('battle-arena-screen');
+            container.innerHTML = `
+                <div id="battle-arena" class="relative p-4 md:p-8 min-h-[70vh] flex flex-col justify-between" style="background-image: url('${stage.background}')">
+                    <!-- Enemy Team -->
+                    <div id="enemy-team" class="flex justify-center gap-4">
+                        ${battleState.enemyTeam.map(enemy => `
+                            <div class="battle-character text-center enemy" data-combatant-id="${enemy.instanceId}">
+                                <img src="${enemy.stats.image}" class="h-24 md:h-32 pointer-events-none">
+                                <p class="text-sm font-bold text-white bg-black/50 rounded px-1">${enemy.stats.name}</p>
+                                <div class="health-bar-bg mt-1"><div id="hp-${enemy.instanceId}" class="health-bar-fill enemy h-2" style="width: 100%"></div></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <!-- Player Team -->
+                    <div id="player-team" class="flex justify-center gap-4">
+                        ${battleState.playerTeam.map(player => `
+                            <div class="battle-character text-center player" data-combatant-id="${player.instanceId}">
+                                <img src="${GAME_DB.characters[playerData.characters[player.instanceId].id].image}" class="h-24 md:h-32 pointer-events-none transform -scale-x-100">
+                                <p class="text-sm font-bold text-white bg-black/50 rounded px-1">${GAME_DB.characters[playerData.characters[player.instanceId].id].name}</p>
+                                <div class="health-bar-bg mt-1"><div id="hp-${player.instanceId}" class="health-bar-fill h-2" style="width: 100%"></div></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <!-- Controls -->
+                    <div class="absolute top-2 right-2 bg-black/50 rounded-lg p-2 flex gap-2">
+                        <button id="give-up-btn" class="text-white bg-red-600 hover:bg-red-700 font-bold px-3 py-1 rounded-md">Desistir</button>
+                        <button id="battle-speed-btn" class="text-white font-bold">Velocidade: ${currentBattleSpeed}x</button>
+                    </div>
+                </div>`;
+            document.getElementById('battle-speed-btn').onclick = () => {
+                currentBattleSpeed = currentBattleSpeed === 1 ? 2 : 1;
+                battleState.battleSpeed = currentBattleSpeed;
+                document.getElementById('battle-speed-btn').innerText = `Velocidade: ${currentBattleSpeed}x`;
+            };
+            document.getElementById('give-up-btn').onclick = () => {
+                battleState.isBattleOver = true;
+                showBattleResult(false);
+            };
+        }
+        
+        function updateHealthBar(combatant) {
+            const healthBarElement = document.getElementById(`hp-${combatant.instanceId}`);
+            if (healthBarElement) {
+                const maxHp = getCombatantStats(combatant).hp;
+                const percentage = (combatant.currentHp / maxHp) * 100;
+                healthBarElement.style.width = `${percentage}%`;
+            }
+        }
+
+        function showDamageNumber(damage, type) {
+            const arena = document.getElementById('battle-arena');
+            if(arena) {
+                const damageEl = document.createElement('div');
+                damageEl.className = `damage-text ${type}`;
+                damageEl.innerText = formatNumber(damage);
+                arena.appendChild(damageEl);
+                setTimeout(() => damageEl.remove(), 1000);
+            }
+        }
+        
+         function showSkillName(combatant, skillName) {
+            const combatantEl = document.querySelector(`[data-combatant-id="${combatant.instanceId}"]`);
+            if (combatantEl) {
+                const skillEl = document.createElement('div');
+                skillEl.className = 'damage-text skill';
+                skillEl.innerText = skillName;
+                combatantEl.appendChild(skillEl);
+                setTimeout(() => skillEl.remove(), 1000);
+            }
+        }
+
+        function showBattleResult(isVictory) {
+            let rewardText = '';
+            let buttonsHTML = '';
+            if (isVictory) {
+                if (battleState.type === 'stage') {
+                    const stage = GAME_DB.stages[battleState.stageIndex];
+                     if (stage) {
+                        playerData.currency += stage.reward;
+                        rewardText = `<p class="text-lg text-yellow-300 mt-2">Recompensa: ${formatNumber(stage.reward)} Cristais</p>`;
+                        const nextStageExists = battleState.stageIndex + 1 < GAME_DB.stages.length;
+                        buttonsHTML = `
+                            <button onclick="document.getElementById('battle-result-modal').classList.add('hidden'); switchScreen('battle');" class="mt-6 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded">Parar</button>
+                            ${nextStageExists ? `<button onclick="document.getElementById('battle-result-modal').classList.add('hidden'); startBattle(${battleState.stageIndex + 1});" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded">Próxima Fase</button>` : ''}
+                        `;
+                    }
+                } else if (battleState.type === 'endless') {
+                    setTimeout(continueEndlessBattle, 1500); 
+                    return;
+                }
+                savePlayerData();
+            } else {
+                 buttonsHTML = `<button id="close-battle-result" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded">OK</button>`;
+            }
+
+            const modal = document.getElementById('battle-result-modal');
+            modal.innerHTML = `
+                <div class="bg-gray-800 p-8 rounded-lg text-center">
+                    <h2 class="text-4xl font-bold ${isVictory ? 'text-green-400' : 'text-red-500'}">${isVictory ? 'VITÓRIA' : 'DERROTA'}</h2>
+                    ${rewardText}
+                    <div class="flex justify-center gap-4">${buttonsHTML}</div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            const closeBtn = document.getElementById('close-battle-result');
+            if(closeBtn) {
+                closeBtn.onclick = () => {
+                    modal.classList.add('hidden');
+                    switchScreen(battleState.type === 'stage' ? 'battle' : 'home');
+                };
+            }
+        }
+
+        function createCharacterCard(charInstanceId, options = {}) {
+             const pChar = playerData.characters[charInstanceId];
+             if (!pChar) return '';
+             const baseChar = GAME_DB.characters[pChar.id];
+             const draggable = options.draggable ? 'draggable="true"' : '';
+             const tier = Math.min(5, Math.ceil(pChar.quality / 5));
+             return `
+                <div class="relative bg-gray-800/50 rounded-lg overflow-hidden border-2 cursor-pointer rarity-${baseChar.rarity} quality-tier-${tier}" data-char-instance-id="${charInstanceId}" ${draggable}>
+                   <div class="shine absolute inset-0 bg-repeat-x bg-center" style="background-size: 200% 200%;"></div>
+                   <img src="${baseChar.image}" alt="${baseChar.name}" class="w-full h-auto object-cover pointer-events-none">
+                   <div class="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/90 to-transparent p-2">
+                       <p class="font-bold text-white text-sm truncate">${baseChar.name}</p>
+                       <span class="text-xs">${renderQualityStars(pChar.quality)}</span>
+                   </div>
+                    <div class="absolute top-1 right-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">${baseChar.role}</div>
+                   <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 text-right">
+                        <span class="text-yellow-300 font-semibold text-xs">BP ${formatNumber(calculateBP(charInstanceId))}</span>
+                   </div>
+                </div>
+            `;
+        }
+
+        function renderCharacterCollection() {
+            const container = document.getElementById('characters-screen');
+            container.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-white">Coleção de Heróis</h2>
+                    <button onclick="switchScreen('formation')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg">Gerenciar Formação</button>
+                </div>
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                    ${Object.keys(playerData.characters).map(id => createCharacterCard(id)).join('')}
+                </div>
+            `;
+        }
+        
+        function renderFormationScreen() { 
+            const container = document.getElementById('formation-screen');
+            tempFormation = [...playerData.formation]; // Ensure temp formation is reset
+            container.innerHTML = `
+                <h2 class="text-xl font-bold mb-4 text-white">Editar Formação</h2>
+                <div class="p-4 bg-black/20 rounded-lg mb-6 text-center">
+                    <p class="text-gray-400 text-sm">Poder de Batalha Total</p>
+                    <p class="text-4xl font-black text-white tracking-tighter">${formatNumber(calculateTotalBP())}</p>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <div class="lg:w-1/3">
+                        <h3 class="font-semibold mb-2">Heróis Disponíveis</h3>
+                        <div id="formation-character-list" class="max-h-96 overflow-y-auto bg-black/20 p-2 rounded-lg grid grid-cols-3 gap-2"></div>
+                    </div>
+                    <div class="lg:w-2/3">
+                        <h3 class="font-semibold mb-2">Sua Formação (Arraste e Solte)</h3>
+                        <div id="formation-slots" class="grid grid-cols-5 gap-4 bg-black/20 p-4 rounded-lg"></div>
+                         <button id="save-formation-btn" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Salvar Formação</button>
+                    </div>
+                </div>`;
+
+            const listContainer = document.getElementById('formation-character-list');
+            const slotsContainer = document.getElementById('formation-slots');
+            
+            listContainer.innerHTML = '';
+            Object.keys(playerData.characters).forEach(charInstanceId => {
+                const pChar = playerData.characters[charInstanceId];
+                const baseChar = GAME_DB.characters[pChar.id];
+                const card = document.createElement('div');
+                card.innerHTML = `
+                    <div class="relative cursor-grab active:cursor-grabbing" data-char-instance-id="${charInstanceId}" draggable="true">
+                        <img src="${baseChar.image}" class="rounded w-full pointer-events-none rarity-${baseChar.rarity} border-2">
+                        <p class="absolute bottom-1 left-1 text-xs font-bold text-white bg-black/70 px-1 rounded">${baseChar.name}</p>
+                    </div>`;
+                listContainer.appendChild(card);
+                card.querySelector('div').addEventListener('dragstart', handleDragStart);
+            });
+
+            slotsContainer.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const slot = document.createElement('div');
+                slot.classList.add('h-48', 'rounded-lg', 'flex', 'items-center', 'justify-center', 'transition-colors', 'border-2', 'border-dashed', 'border-gray-600');
+                slot.dataset.slotIndex = i;
+
+                const charInstanceId = tempFormation[i];
+                if(charInstanceId) {
+                    slot.innerHTML = createCharacterCard(charInstanceId, { draggable: true });
+                    slot.querySelector('div').addEventListener('dragstart', handleDragStart);
+                    slot.classList.remove('border-dashed', 'border-gray-600');
+                } else {
+                    slot.innerHTML = '<span class="text-gray-500">Vazio</span>';
+                }
+                
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('dragleave', handleDragLeave);
+                slot.addEventListener('drop', handleDrop);
+                slotsContainer.appendChild(slot);
+            }
+            
+             document.getElementById('save-formation-btn').onclick = () => {
+                playerData.formation = [...tempFormation];
+                savePlayerData();
+                alert("Formação salva com sucesso!");
+                switchScreen('characters');
+            };
+        }
+
+        function renderInventoryScreen(activeTab = 'equipment') { 
+            const container = document.getElementById('inventory-screen');
+             container.innerHTML = `
+                <h2 class="text-xl font-bold text-white mb-4">Inventário</h2>
+                <div class="flex border-b border-gray-700 mb-4">
+                    <button data-tab="equipment" class="sub-nav-button flex-1 p-3 font-semibold ${activeTab === 'equipment' ? 'active' : ''}">Equipamentos</button>
+                    <button data-tab="items" class="sub-nav-button flex-1 p-3 font-semibold ${activeTab === 'items' ? 'active' : ''}">Itens</button>
+                    <button data-tab="fragments" class="sub-nav-button flex-1 p-3 font-semibold ${activeTab === 'fragments' ? 'active' : ''}">Fragmentos</button>
+                </div>
+                <div id="inventory-content"></div>
+            `;
+
+            container.querySelectorAll('.sub-nav-button').forEach(btn => {
+                btn.onclick = () => renderInventoryScreen(btn.dataset.tab);
+            });
+
+            const contentContainer = document.getElementById('inventory-content');
+            if (activeTab === 'equipment') {
+                contentContainer.innerHTML = `
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+                        ${Object.entries(playerData.equipment).map(([eqInstanceId, pEq]) => {
+                            const baseEq = GAME_DB.equipment[pEq.id];
+                            const isEquipped = pEq.equippedTo !== null;
+                            const tier = Math.min(5, Math.ceil(pEq.quality / 5));
+                            return `
+                                <div onclick="openEquipmentDetailModal('${eqInstanceId}')" class="relative text-center border-2 rounded-lg p-2 cursor-pointer ${isEquipped ? 'opacity-50' : ''} rarity-${baseEq.rarity} quality-tier-${tier}">
+                                    <img src="${baseEq.image}" alt="${baseEq.name}" class="mx-auto rounded mb-1">
+                                    <p class="font-semibold text-xs truncate">${baseEq.name} +${pEq.refinement}</p>
+                                    <p class="text-xs rarity-${baseEq.rarity}-bg text-black rounded-full px-1 absolute top-1 right-1">L.${pEq.level}</p>
+                                    ${isEquipped ? '<p class="text-xs text-green-400">Equipado</p>' : ''}
+                                </div>`;
+                        }).join('')}
+                    </div>`;
+            } else if (activeTab === 'items') {
+                 contentContainer.innerHTML = `
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+                        ${Object.entries(playerData.items).map(([itemId, quantity]) => {
+                            const baseItem = GAME_DB.items[itemId];
+                            if(!baseItem) return '';
+                            return `
+                                <div class="relative text-center border-2 border-gray-600 rounded-lg p-2" title="${baseItem.description}">
+                                    <img src="${baseItem.image}" alt="${baseItem.name}" class="mx-auto rounded mb-1">
+                                    <p class="font-semibold text-xs truncate">${baseItem.name}</p>
+                                    <p class="text-xs bg-gray-700 text-white rounded-full px-2 absolute bottom-1 right-1">x${quantity}</p>
+                                </div>`;
+                        }).join('')}
+                    </div>`;
+            } else {
+                contentContainer.innerHTML = `<p class="text-center text-gray-500 py-8">Fragmentos de herói estarão disponíveis em breve.</p>`;
+            }
+        }
+        
+        function renderRecruitScreen() {
+            const container = document.getElementById('recruit-screen');
+            container.innerHTML = `
+                 <h2 class="text-xl font-bold mb-4 text-white">Portal de Recrutamento</h2>
+                 <div class="flex border-b border-gray-700 mb-4">
+                     <button id="recruit-tab-hero" class="flex-1 p-3 font-semibold border-b-2 border-purple-500 text-white">Heróis</button>
+                     <button id="recruit-tab-equip" class="flex-1 p-3 font-semibold border-b-2 border-transparent text-gray-400">Equipamentos</button>
+                 </div>
+                 <div id="recruit-hero-content" class="bg-black/20 p-6 rounded-lg text-center flex flex-col items-center">
+                     <img src="https://placehold.co/300x200/bb9af7/1a1b26?text=Portal+M%C3%ADstico" alt="Portal de Recrutamento de Heróis" class="rounded-lg mb-4">
+                    <p class="mb-4 text-gray-300">Use seus cristais para invocar novos heróis para sua causa.</p>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <button onclick="recruit('hero', 1)" class="btn-grad font-bold py-3 px-6 rounded-lg">Invocar x1 (150 Cristais)</button>
+                        <button onclick="recruit('hero', 10)" class="btn-grad font-bold py-3 px-6 rounded-lg">Invocar x10 (1500 Cristais)</button>
+                    </div>
+                 </div>
+                 <div id="recruit-equip-content" class="hidden bg-black/20 p-6 rounded-lg text-center flex flex-col items-center">
+                     <img src="https://placehold.co/300x200/7dcfff/1a1b26?text=Forja+M%C3%ADstica" alt="Portal de Recrutamento de Equipamentos" class="rounded-lg mb-4">
+                    <p class="mb-4 text-gray-300">Forje equipamentos poderosos para seus heróis.</p>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <button onclick="recruit('equip', 1)" class="btn-grad font-bold py-3 px-6 rounded-lg">Forjar x1 (100 Cristais)</button>
+                        <button onclick="recruit('equip', 10)" class="btn-grad font-bold py-3 px-6 rounded-lg">Forjar x10 (1000 Cristais)</button>
+                    </div>
+                 </div>`;
+
+            const heroTab = document.getElementById('recruit-tab-hero');
+            const equipTab = document.getElementById('recruit-tab-equip');
+            const heroContent = document.getElementById('recruit-hero-content');
+            const equipContent = document.getElementById('recruit-equip-content');
+
+            heroTab.onclick = () => {
+                heroTab.classList.add('border-purple-500', 'text-white'); heroTab.classList.remove('border-transparent', 'text-gray-400');
+                equipTab.classList.add('border-transparent', 'text-gray-400'); equipTab.classList.remove('border-purple-500', 'text-white');
+                heroContent.classList.remove('hidden'); equipContent.classList.add('hidden');
+            };
+            equipTab.onclick = () => {
+                equipTab.classList.add('border-purple-500', 'text-white'); equipTab.classList.remove('border-transparent', 'text-gray-400');
+                heroTab.classList.add('border-transparent', 'text-gray-400'); heroTab.classList.remove('border-purple-500', 'text-white');
+                equipContent.classList.remove('hidden'); heroContent.classList.add('hidden');
+            };
+        }
+        
+        function renderPlaceholderScreen(screenId, title, emoji) {
+            const container = document.getElementById(`${screenId}-screen`);
+            container.innerHTML = `
+                <div class="text-center py-16">
+                    <h2 class="text-3xl font-bold mb-2">${emoji} ${title} ${emoji}</h2>
+                    <p class="text-gray-400">Em breve...</p>
+                </div>
+            `;
+        }
+        function renderRankingScreen() { renderPlaceholderScreen('ranking', 'Ranking', '🏆'); }
+        function renderEventsScreen() { renderPlaceholderScreen('events', 'Eventos', '🎉'); }
+        function renderClanScreen() { renderPlaceholderScreen('clan', 'Clã', '🛡️'); }
+
+        function renderAdminScreen() {
+             const container = document.getElementById('admin-screen');
+             container.innerHTML = `
+                 <h2 class="text-xl font-bold mb-4 text-red-400">Painel de Administrador</h2>
+                <div class="space-y-6">
+                    <!-- RECURSOS -->
+                    <div class="bg-black/20 p-4 rounded-lg space-y-2">
+                        <h3 class="font-semibold mb-2">Recursos</h3>
+                        <div class="flex items-center gap-2">
+                             <input id="admin-currency-amount" type="number" value="5000" class="bg-gray-700 p-2 rounded w-full">
+                             <button id="admin-add-currency" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded whitespace-nowrap">Add Cristais</button>
+                        </div>
+                        ${Object.keys(GAME_DB.items).map(itemId => {
+                            const item = GAME_DB.items[itemId];
+                            return `<div class="flex items-center gap-2">
+                                <input id="admin-item-${itemId}" type="number" value="10" class="bg-gray-700 p-2 rounded w-full">
+                                <button data-item-id="${itemId}" class="admin-add-item-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded whitespace-nowrap">Add ${item.name}</button>
+                            </div>`
+                        }).join('')}
+                    </div>
+                     <!-- EDITOR DE HERÓI -->
+                    <div class="bg-black/20 p-4 rounded-lg">
+                         <h3 class="font-semibold mb-2">Editor de Herói</h3>
+                         <select id="admin-char-editor-select" class="bg-gray-700 text-white p-2 rounded w-full mb-2"></select>
+                         <div id="admin-char-editor-fields" class="hidden grid grid-cols-2 gap-2"></div>
+                    </div>
+                     <!-- EDITOR DE EQUIPAMENTO -->
+                    <div class="bg-black/20 p-4 rounded-lg">
+                         <h3 class="font-semibold mb-2">Editor de Equipamento</h3>
+                         <select id="admin-equip-editor-select" class="bg-gray-700 text-white p-2 rounded w-full mb-2"></select>
+                         <div id="admin-equip-editor-fields" class="hidden grid grid-cols-2 gap-2"></div>
+                    </div>
+                     <!-- AÇÕES PERIGOSAS -->
+                     <div class="bg-black/20 p-4 rounded-lg">
+                        <h3 class="font-semibold mb-2 text-yellow-400">Ações Perigosas</h3>
+                        <button id="admin-reset-account" class="bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded">Resetar Conta</button>
+                    </div>
+                </div>`;
+                
+            // Populate and set up listeners
+            document.getElementById('admin-add-currency').onclick = () => {
+                const amount = parseInt(document.getElementById('admin-currency-amount').value, 10) || 0;
+                playerData.currency += amount; 
+                savePlayerData(); 
+                updateUI();
+            };
+
+            document.querySelectorAll('.admin-add-item-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const itemId = btn.dataset.itemId;
+                    const amount = parseInt(document.getElementById(`admin-item-${itemId}`).value, 10) || 0;
+                    playerData.items[itemId] = (playerData.items[itemId] || 0) + amount;
+                    savePlayerData();
+                    updateUI();
+                    alert(`${amount} de ${GAME_DB.items[itemId].name} adicionado(s)!`);
+                };
+            });
+
+            document.getElementById('admin-reset-account').onclick = () => { if (confirm("TEM CERTEZA?")) { localStorage.removeItem(`ala_playerData_${currentUser}`); window.location.reload(); }};
+            
+            // Character Editor Logic
+            const charEditorSelect = document.getElementById('admin-char-editor-select');
+            charEditorSelect.innerHTML = '<option value="">Selecione um herói para editar...</option>';
+            Object.entries(playerData.characters).forEach(([instanceId, pChar]) => {
+                charEditorSelect.innerHTML += `<option value="${instanceId}">${GAME_DB.characters[pChar.id].name} (ID: ...${instanceId.slice(-4)})</option>`;
+            });
+            charEditorSelect.onchange = (e) => {
+                const selectedId = e.target.value;
+                const fieldsContainer = document.getElementById('admin-char-editor-fields');
+                if (!selectedId) {
+                    fieldsContainer.classList.add('hidden');
+                    return;
+                }
+                const pChar = playerData.characters[selectedId];
+                const baseChar = GAME_DB.characters[pChar.id];
+                fieldsContainer.innerHTML = `
+                    ${Object.keys(baseChar).filter(k => typeof baseChar[k] === 'number' && k !== 'rarity').map(stat => `
+                        <label class="capitalize">${stat}:</label>
+                        <input type="number" data-stat="${stat}" value="${pChar.stat_mods[stat] || baseChar[stat]}" class="bg-gray-800 p-1 rounded w-full">
+                    `).join('')}
+                    <button id="save-char-stats" class="col-span-2 mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Salvar Herói</button>
+                `;
+                fieldsContainer.classList.remove('hidden');
+
+                document.getElementById('save-char-stats').onclick = () => {
+                    const charToUpdate = playerData.characters[selectedId];
+                    fieldsContainer.querySelectorAll('input').forEach(input => {
+                        charToUpdate.stat_mods[input.dataset.stat] = parseInt(input.value, 10);
+                    });
+                    savePlayerData();
+                    updateUI();
+                    alert('Herói atualizado!');
+                };
+            };
+            
+            // Equipment Editor Logic
+            const equipEditorSelect = document.getElementById('admin-equip-editor-select');
+            equipEditorSelect.innerHTML = '<option value="">Selecione um equipamento para editar...</option>';
+            Object.entries(playerData.equipment).forEach(([instanceId, pEq]) => {
+                equipEditorSelect.innerHTML += `<option value="${instanceId}">${GAME_DB.equipment[pEq.id].name} (ID: ...${instanceId.slice(-4)})</option>`;
+            });
+
+             equipEditorSelect.onchange = (e) => {
+                const selectedId = e.target.value;
+                const fieldsContainer = document.getElementById('admin-equip-editor-fields');
+                if (!selectedId) {
+                    fieldsContainer.classList.add('hidden');
+                    return;
+                }
+                const pEq = playerData.equipment[selectedId];
+                const baseEq = GAME_DB.equipment[pEq.id];
+                 fieldsContainer.innerHTML = `
+                    ${Object.keys(baseEq.stats).map(stat => `
+                        <label class="capitalize">${stat}:</label>
+                        <input type="number" data-stat="${stat}" value="${pEq.stat_mods[stat] || baseEq.stats[stat]}" class="bg-gray-800 p-1 rounded w-full">
+                    `).join('')}
+                    <button id="save-equip-stats" class="col-span-2 mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Salvar Equipamento</button>
+                `;
+                fieldsContainer.classList.remove('hidden');
+
+                document.getElementById('save-equip-stats').onclick = () => {
+                    const eqToUpdate = playerData.equipment[selectedId];
+                    fieldsContainer.querySelectorAll('input').forEach(input => {
+                        eqToUpdate.stat_mods[input.dataset.stat] = parseInt(input.value, 10);
+                    });
+                    savePlayerData();
+                    updateUI();
+                    alert('Equipamento atualizado!');
+                };
+            };
+        }
+        
+        function recruit(type, amount) {
+            const cost = (type === 'hero' ? 150 : 100) * amount;
+            if (playerData.currency < cost) { alert("Cristais insuficientes!"); return; }
+            playerData.currency -= cost;
+            const results = [];
+            const db = type === 'hero' ? GAME_DB.characters : GAME_DB.equipment;
+            const allIds = Object.keys(db);
+
+            for (let i = 0; i < amount; i++) {
+                const rand = Math.random() * 100;
+                let chosenRarity = (rand < 3) ? 5 : (rand < 15) ? 4 : (rand < 40) ? 3 : (rand < 75) ? 2 : 1;
+                let potentialItems = allIds.filter(id => db[id].rarity === chosenRarity);
+                if (potentialItems.length === 0) { 
+                    potentialItems = allIds.filter(id => db[id].rarity === 1);
+                }
+                const recruitedId = potentialItems[Math.floor(Math.random() * potentialItems.length)];
+                
+                const newInstanceId = createUniqueId(type === 'hero' ? 'char' : 'eq');
+                if (type === 'hero') {
+                    playerData.characters[newInstanceId] = { id: recruitedId, level:1, exp:0, refinement:0, quality:1, skillLevel: 1, equipped: {}, stat_mods: {}, refine_bonus_stats: {} };
+                } else {
+                    playerData.equipment[newInstanceId] = { id: recruitedId, level:1, exp:0, refinement:0, quality:1, equippedTo: null, stat_mods: {}, refine_bonus_stats: {} };
+                }
+                results.push(newInstanceId);
+            }
+            displayRecruitResults(results, type);
+            savePlayerData();
+            updateUI();
+        }
+        
+        function displayRecruitResults(instanceIds, type) {
+            const modal = document.getElementById('recruit-modal');
+            let content = '';
+            if (type === 'hero') {
+                content = instanceIds.map(id => createCharacterCard(id)).join('');
+            } else {
+                content = instanceIds.map(id => {
+                    const pEq = playerData.equipment[id];
+                    const baseEq = GAME_DB.equipment[pEq.id];
+                    return `
+                    <div class="relative text-center border-2 rounded-lg p-2 rarity-${baseEq.rarity}">
+                        <img src="${baseEq.image}" alt="${baseEq.name}" class="mx-auto rounded mb-1 h-16 w-16">
+                        <p class="font-semibold text-xs truncate">${baseEq.name}</p>
+                    </div>`;
+                }).join('');
+            }
+            modal.innerHTML = `
+                <div class="bg-[#24283b] p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Resultados da Invocação</h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">${content}</div>
+                    <button id="recruit-modal-close" class="mt-6 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Fechar</button>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            document.getElementById('recruit-modal-close').onclick = () => modal.classList.add('hidden');
+        }
+        
+        // --- DRAG & DROP LOGIC for Formation ---
+        let tempFormation = []; let draggedCharInstanceId = null;
+        function handleDragStart(e) { draggedCharInstanceId = e.currentTarget.dataset.charInstanceId; e.dataTransfer.effectAllowed = 'move'; }
+        function handleDragOver(e) { e.preventDefault(); e.currentTarget.style.backgroundColor = 'rgba(187, 154, 247, 0.3)'; }
+        function handleDragLeave(e) { e.currentTarget.style.backgroundColor = ''; }
+        function handleDrop(e) {
+            e.preventDefault(); e.currentTarget.style.backgroundColor = '';
+            if (!draggedCharInstanceId) return;
+            const targetSlotIndex = parseInt(e.currentTarget.dataset.slotIndex);
+            const sourceIndex = tempFormation.indexOf(draggedCharInstanceId);
+            if (sourceIndex > -1) {
+                const charInTargetSlot = tempFormation[targetSlotIndex];
+                tempFormation[sourceIndex] = charInTargetSlot;
+            } else {
+                 tempFormation = tempFormation.map(id => id === draggedCharInstanceId ? null : id);
+            }
+            tempFormation[targetSlotIndex] = draggedCharInstanceId;
+            renderFormationScreen();
+            draggedCharInstanceId = null;
+        }
+        
+        // --- DOMContentLoaded (INITIALIZATION) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            handleLogin();
+            loadPlayerData();
+            switchScreen('home');
+            
+            document.getElementById('logout-btn').onclick = handleLogout;
+            
+            document.querySelectorAll('.nav-button, .mobile-nav-button:not(#mobile-more-btn)').forEach(button => {
+                button.addEventListener('click', () => {
+                    let screenId = button.dataset.screen;
+                     if (screenId === 'home' && battleState.type === 'endless' && !battleState.isBattleOver) {
+                        screenId = 'battle-arena';
+                    }
+                    switchScreen(screenId)
+                });
+            });
+            
+            document.body.addEventListener('click', (e) => {
+                const charCard = e.target.closest('[data-char-instance-id]');
+                if (charCard && !charCard.closest('#formation-character-list') && !charCard.closest('#formation-slots div[draggable="true"]')) {
+                     openCharacterDetailModal(charCard.dataset.charInstanceId);
+                }
+                // Close "more" menu if clicking outside
+                const moreMenu = document.getElementById('mobile-more-menu');
+                const moreBtn = document.getElementById('mobile-more-btn');
+                if (moreMenu && !moreMenu.classList.contains('hidden') && !moreMenu.contains(e.target) && !moreBtn.contains(e.target)) {
+                    moreMenu.classList.add('hidden', 'opacity-0', 'translate-y-2');
+                }
+            });
+
+            // Mobile "More" button logic
+            const moreMenu = document.getElementById('mobile-more-menu');
+            const moreBtn = document.getElementById('mobile-more-btn');
+            if(moreBtn) {
+                moreBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isHidden = moreMenu.classList.contains('hidden');
+                    if (isHidden) {
+                        moreMenu.classList.remove('hidden');
+                        setTimeout(() => { // Delay to allow display property to apply before transition
+                             moreMenu.classList.remove('opacity-0', 'translate-y-2');
+                        }, 10);
+                    } else {
+                         moreMenu.classList.add('opacity-0', 'translate-y-2');
+                         setTimeout(() => {
+                            moreMenu.classList.add('hidden');
+                         }, 300); // Match transition duration
+                    }
+                });
+            }
+            if(moreMenu) {
+                moreMenu.querySelectorAll('button').forEach(button => {
+                    button.addEventListener('click', () => switchScreen(button.dataset.screen));
+                });
+            }
+        });
+        
+    </script>
+</body>
+</html>
+

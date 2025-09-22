@@ -2154,7 +2154,7 @@
             `;
         }
 
-        function renderRecruitScreen() {
+function renderRecruitScreen() {
             const container = document.getElementById('recruit-screen');
             container.innerHTML = `
                 <h2 class="text-xl font-bold mb-6 text-white text-center">Central de Recrutamento</h2>
@@ -2179,7 +2179,7 @@
                     </div>
                      <div class="bg-gradient-to-br from-green-900/50 to-teal-900/50 p-6 rounded-lg border-2 border-green-500">
                         <h3 class="text-xl font-bold mb-4 text-center text-green-300">Invocar Pets</h3>
-                        <img src="https://i.ibb.co/jZyxX54L/pet.png" class="mx-auto rounded-full border-2 border-green-400 mb-4" alt="Invocação de Pet">
+                        <img src="https://i.ibb.co/jZyxX54L/pet.png" class="mx-auto rounded-lg border-2 border-green-400 mb-4" alt="Invocação de Pet">
                         <div class="text-sm text-gray-300 mb-4"><p>• 5★: 5%</p><p>• 4★: 15%</p><p>• 3★: 30%</p><p>• 2★: 50%</p></div>
                         <div class="space-y-3">
                             <button onclick="recruit('pet', 1)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg">1x - 120 💎</button>
@@ -2188,7 +2188,7 @@
                     </div>
                     <div class="bg-gradient-to-br from-indigo-900/50 to-sky-900/50 p-6 rounded-lg border-2 border-sky-500">
                         <h3 class="text-xl font-bold mb-4 text-center text-sky-300">Invocar Artefatos</h3>
-                        <img src="https://i.ibb.co/vCz2MP4g/artefato.png" class="mx-auto rounded-full border-2 border-sky-400 mb-4" alt="Invocação de Artefato">
+                        <img src="https://i.ibb.co/vCz2MP4g/artefato.png" class="mx-auto rounded-lg border-2 border-sky-400 mb-4" alt="Invocação de Artefato">
                         <div class="text-sm text-gray-300 mb-4"><p>• 5★: 5%</p><p>• 4★: 15%</p><p>• 3★: 30%</p><p>• 2★: 50%</p></div>
                         <div class="space-y-3">
                             <button onclick="recruit('artifact', 1)" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg">1x - 250 💎</button>
@@ -2202,7 +2202,6 @@
                 </div>
             `;
         }
-
         // --- NEW SYSTEMS RENDERING ---
         function renderDailyRewardsScreen() {
             const container = document.getElementById('daily-rewards-screen');
